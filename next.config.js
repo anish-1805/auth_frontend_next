@@ -31,10 +31,15 @@ const nextConfig = {
   
   // API proxy configuration
   async rewrites() {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    if (!apiUrl) {
+      console.warn('NEXT_PUBLIC_API_URL is not set, skipping API rewrites');
+      return [];
+    }
     return [
       {
         source: '/api/:path*',
-        destination: process.env.NEXT_PUBLIC_API_URL + '/api/:path*',
+        destination: apiUrl + '/api/:path*',
       },
     ];
   },
