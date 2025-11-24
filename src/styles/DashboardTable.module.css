@@ -127,6 +127,11 @@
   padding: 16px 24px;
   margin-bottom: 16px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
 }
 
 .sectionHeader h2 {
@@ -408,4 +413,117 @@
   .searchInput {
     width: 100%;
   }
+}
+
+/* Pagination Toggle */
+.paginationToggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.paginationToggle label {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Pagination Wrapper */
+.paginationWrapper {
+  width: 100%;
+}
+
+/* Selection and Bulk Actions */
+.sectionHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.selectionInfo {
+  background: #3b82f6;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.bulkActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.clearSelectionButton {
+  padding: 8px 16px;
+  background: #6b7280;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.clearSelectionButton:hover:not(:disabled) {
+  background: #4b5563;
+}
+
+.clearSelectionButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.deleteButton {
+  padding: 8px 16px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.deleteButton:hover:not(:disabled) {
+  background: #dc2626;
+}
+
+.deleteButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Checkbox Column */
+.checkboxColumn {
+  width: 50px;
+  text-align: center;
+  padding: 12px 8px !important;
+}
+
+.selectAllCheckbox,
+.userCheckbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #3b82f6;
+}
+
+.selectAllCheckbox:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Selected Row */
+.selectedRow {
+  background-color: #eff6ff !important;
+}
+
+.selectedRow:hover {
+  background-color: #dbeafe !important;
 }

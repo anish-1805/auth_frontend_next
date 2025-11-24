@@ -10,7 +10,7 @@ import { AuthService } from '@/services/authService';
 import { User } from '@/interfaces/auth';
 import { formatDate } from '@/utilities/formatDate';
 import { ROUTES } from '@/constants/routes';
-import InfiniteScroll from '@/components/InfiniteScroll';
+import { PaginationWrapper, PaginationConfig, PaginationData, PaginationActions, PaginationType } from '@/components/pagination';
 import styles from '@/styles/DashboardTable.module.css';
 
 export default function DashboardView() {
@@ -25,6 +25,11 @@ export default function DashboardView() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [paginationType, setPaginationType] = useState<PaginationType>('tabs');
+  const itemsPerPage = 10;
+  const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
+  const [isDeleting, setIsDeleting] = useState(false);
   const initialLoadRef = useRef(false);
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
@@ -44,13 +49,20 @@ export default function DashboardView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearchTerm, authTypeFilter, statusFilter, users]);
 
+  // Clear selection when filters change
+  useEffect(() => {
+    clearSelection();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearchTerm, authTypeFilter, statusFilter, paginationType]);
+
   const loadInitialUsers = async () => {
     try {
       setIsLoading(true);
-      const response = await AuthService.getAllUsers(1, 10);
+      const response = await AuthService.getAllUsers(1, itemsPerPage);
       setUsers(response.users);
       setTotal(response.total);
       setHasMore(response.hasMore);
+      setTotalPages(Math.ceil(response.total / itemsPerPage));
       setPage(1);
     } catch (error) {
       toast.error('Failed to fetch users');
@@ -66,7 +78,7 @@ export default function DashboardView() {
     try {
       setIsLoading(true);
       const nextPage = page + 1;
-      const response = await AuthService.getAllUsers(nextPage, 10);
+      const response = await AuthService.getAllUsers(nextPage, itemsPerPage);
       setUsers((prev) => [...prev, ...response.users]);
       setHasMore(response.hasMore);
       setPage(nextPage);
@@ -77,6 +89,25 @@ export default function DashboardView() {
       setIsLoading(false);
     }
   }, [page, hasMore, isLoading]);
+
+  const loadUsersForPage = useCallback(async (pageNum: number) => {
+    if (isLoading) return;
+
+    try {
+      setIsLoading(true);
+      const response = await AuthService.getAllUsers(pageNum, itemsPerPage);
+      setUsers(response.users);
+      setTotal(response.total);
+      setHasMore(response.hasMore);
+      setTotalPages(Math.ceil(response.total / itemsPerPage));
+      setPage(pageNum);
+    } catch (error) {
+      toast.error('Failed to load users');
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isLoading]);
 
   const filterAndSortUsers = (term = '') => {
     let filtered = users;
@@ -127,8 +158,117 @@ export default function DashboardView() {
     setStatusFilter('all');
   };
 
+  // Selection handlers
+  const handleSelectUser = (userId: string) => {
+    setSelectedUsers(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(userId)) {
+        newSet.delete(userId);
+      } else {
+        newSet.add(userId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (selectedUsers.size === filteredUsers.length) {
+      setSelectedUsers(new Set());
+    } else {
+      setSelectedUsers(new Set(filteredUsers.map(user => user.id)));
+    }
+  };
+
+  const clearSelection = () => {
+    setSelectedUsers(new Set());
+  };
+
+  // Delete handlers
+  const handleDeleteSelected = async () => {
+    if (selectedUsers.size === 0) return;
+
+    const confirmed = window.confirm(
+      `Are you sure you want to delete ${selectedUsers.size} user(s)? This action cannot be undone.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setIsDeleting(true);
+      const userIdsArray = Array.from(selectedUsers);
+      const result = await AuthService.deleteUsers(userIdsArray);
+      
+      toast.success(`Successfully deleted ${result.deletedCount} user(s)`);
+      
+      if (result.failedDeletions && result.failedDeletions.length > 0) {
+        toast.warning(`Failed to delete ${result.failedDeletions.length} user(s)`);
+      }
+
+      // Clear selection and refresh data
+      clearSelection();
+      
+      // Refresh current page or go back if current page is empty
+      if (paginationType === 'tabs') {
+        const remainingUsers = filteredUsers.length - result.deletedCount;
+        if (remainingUsers === 0 && page > 1) {
+          loadUsersForPage(page - 1);
+        } else {
+          loadUsersForPage(page);
+        }
+      } else {
+        loadInitialUsers();
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete users');
+      console.error('Delete error:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const hasActiveFilters =
     searchTerm !== '' || authTypeFilter !== 'all' || statusFilter !== 'all';
+
+  // Pagination configuration
+  const paginationConfig: PaginationConfig = {
+    type: paginationType,
+    itemsPerPage,
+    showPageInfo: true,
+    showJumpToPage: true,
+  };
+
+  // Pagination data
+  const paginationData: PaginationData = {
+    items: filteredUsers,
+    currentPage: page,
+    totalItems: total,
+    totalPages,
+    hasMore: hasMore && !hasActiveFilters,
+    isLoading,
+  };
+
+  // Pagination actions
+  const paginationActions: PaginationActions = {
+    loadMore: loadMoreUsers,
+    goToPage: loadUsersForPage,
+    nextPage: () => {
+      if (page < totalPages && !isLoading) {
+        loadUsersForPage(page + 1);
+      }
+    },
+    prevPage: () => {
+      if (page > 1 && !isLoading) {
+        loadUsersForPage(page - 1);
+      }
+    },
+    refresh: () => {
+      if (paginationType === 'tabs') {
+        loadUsersForPage(page);
+      } else {
+        loadInitialUsers();
+      }
+    },
+  };
 
   const handleImageError = (userId: string) => {
     setImageErrors((prev) => new Set(prev).add(userId));
@@ -210,10 +350,37 @@ export default function DashboardView() {
 
       {/* All Users Section Header */}
       <div className={styles.sectionHeader}>
-        <h2>
-          All Users ({filteredUsers.length}
-          {filteredUsers.length !== total && ` of ${total}`})
-        </h2>
+        <div className={styles.sectionHeaderLeft}>
+          <h2>
+            All Users ({paginationType === 'tabs' && !hasActiveFilters 
+              ? `${Math.min(page * itemsPerPage, total)} of ${total}`
+              : filteredUsers.length + (filteredUsers.length !== total ? ` of ${total}` : '')
+            })
+          </h2>
+          {selectedUsers.size > 0 && (
+            <span className={styles.selectionInfo}>
+              {selectedUsers.size} user(s) selected
+            </span>
+          )}
+        </div>
+        {selectedUsers.size > 0 && (
+          <div className={styles.bulkActions}>
+            <button
+              onClick={clearSelection}
+              className={styles.clearSelectionButton}
+              disabled={isDeleting}
+            >
+              Clear Selection
+            </button>
+            <button
+              onClick={handleDeleteSelected}
+              className={styles.deleteButton}
+              disabled={isDeleting}
+            >
+              {isDeleting ? 'Deleting...' : `Delete Selected (${selectedUsers.size})`}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Search, Filters, and Sort */}
@@ -251,89 +418,123 @@ export default function DashboardView() {
             Clear Filters
           </button>
         )}
+
+        <div className={styles.paginationToggle}>
+          <label htmlFor="pagination-type">Pagination Type:</label>
+          <select
+            id="pagination-type"
+            value={paginationType}
+            onChange={(e) => {
+              setPaginationType(e.target.value as PaginationType);
+              // Reset to first page when switching pagination types
+              if (e.target.value === 'tabs' && paginationType === 'infinite') {
+                loadUsersForPage(1);
+              }
+            }}
+            className={styles.filterSelect}
+          >
+            <option value="tabs">Tabs Pagination</option>
+            <option value="infinite">Infinite Scroll</option>
+          </select>
+        </div>
       </div>
 
-      {/* Users Table with Infinite Scroll */}
+      {/* Users Table with Modular Pagination */}
       <div className={styles.tableContainer}>
-        {filteredUsers.length === 0 && !isLoading ? (
-          <div className={styles.noUsers}>No users found</div>
-        ) : (
-          <InfiniteScroll
-            loadMore={loadMoreUsers}
-            hasMore={hasMore && !hasActiveFilters}
-            isLoading={isLoading}
-            loader={
-              <div className={styles.loadMoreContainer}>
-                <div className={styles.spinner}></div>
-                <span style={{ marginLeft: '10px' }}>Loading more users...</span>
-              </div>
-            }
-            endMessage={<div className={styles.endMessage}>All users loaded</div>}
-          >
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>User</th>
-                  <th>Email</th>
-                  <th>Auth Type</th>
-                  <th>Status</th>
-                  <th>Joined</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredUsers.map((u) => (
-                  <tr key={u.id}>
-                    <td>
-                      <div className={styles.userCell}>
-                        {shouldShowAvatar(u) ? (
-                          <Image
-                            src={u.avatar!}
-                            alt={u.name}
-                            width={40}
-                            height={40}
-                            className={styles.avatar}
-                            onError={() => handleImageError(u.id)}
-                          />
-                        ) : (
-                          <div className={styles.avatarPlaceholder}>
-                            {u.name.charAt(0).toUpperCase()}
-                          </div>
-                        )}
-                        <div className={styles.userInfo}>
-                          <div className={styles.userName}>{u.name}</div>
+        <PaginationWrapper
+          config={paginationConfig}
+          data={paginationData}
+          actions={paginationActions}
+          loader={
+            <div className={styles.loadMoreContainer}>
+              <div className={styles.spinner}></div>
+              <span style={{ marginLeft: '10px' }}>Loading users...</span>
+            </div>
+          }
+          endMessage={<div className={styles.endMessage}>All users loaded</div>}
+          emptyMessage={<div className={styles.noUsers}>No users found</div>}
+          className={styles.paginationWrapper}
+        >
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th className={styles.checkboxColumn}>
+                  <input
+                    type="checkbox"
+                    checked={filteredUsers.length > 0 && selectedUsers.size === filteredUsers.length}
+                    onChange={handleSelectAll}
+                    className={styles.selectAllCheckbox}
+                    disabled={filteredUsers.length === 0}
+                  />
+                </th>
+                <th>User</th>
+                <th>Email</th>
+                <th>Auth Type</th>
+                <th>Status</th>
+                <th>Joined</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredUsers.map((u) => (
+                <tr key={u.id} className={selectedUsers.has(u.id) ? styles.selectedRow : ''}>
+                  <td className={styles.checkboxColumn}>
+                    <input
+                      type="checkbox"
+                      checked={selectedUsers.has(u.id)}
+                      onChange={() => handleSelectUser(u.id)}
+                      className={styles.userCheckbox}
+                    />
+                  </td>
+                  <td>
+                    <div className={styles.userCell}>
+                      {shouldShowAvatar(u) ? (
+                        <Image
+                          src={u.avatar!}
+                          alt={u.name}
+                          width={40}
+                          height={40}
+                          className={styles.avatar}
+                          onError={() => handleImageError(u.id)}
+                        />
+                      ) : (
+                        <div className={styles.avatarPlaceholder}>
+                          {u.name.charAt(0).toUpperCase()}
                         </div>
+                      )}
+                      <div className={styles.userInfo}>
+                        <div className={styles.userName}>{u.name}</div>
                       </div>
-                    </td>
-                    <td>
-                      <span className={styles.userEmail}>{u.email}</span>
-                    </td>
-                    <td>
-                      <span
-                        className={`${styles.badge} ${
-                          u.isSocialLogin ? styles.badgeOAuth : styles.badgeLocal
-                        }`}
-                      >
-                        {u.isSocialLogin ? 'OAuth' : 'Local'}
-                      </span>
-                    </td>
-                    <td>
-                      <span
-                        className={`${styles.badge} ${
-                          u.isEmailVerified ? styles.badgeVerified : styles.badgeNotVerified
-                        }`}
-                      >
-                        {u.isEmailVerified ? '✓ Verified' : '✗ Not Verified'}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={styles.dateText}>{formatDate(u.createdAt)}</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </InfiniteScroll>
-        )}
+                    </div>
+                  </td>
+                  <td>
+                    <span className={styles.userEmail}>{u.email}</span>
+                  </td>
+                  <td>
+                    <span
+                      className={`${styles.badge} ${
+                        u.isSocialLogin ? styles.badgeOAuth : styles.badgeLocal
+                      }`}
+                    >
+                      {u.isSocialLogin ? 'OAuth' : 'Local'}
+                    </span>
+                  </td>
+                  <td>
+                    <span
+                      className={`${styles.badge} ${
+                        u.isEmailVerified ? styles.badgeVerified : styles.badgeNotVerified
+                      }`}
+                    >
+                      {u.isEmailVerified ? '✓ Verified' : '✗ Not Verified'}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={styles.dateText}>{formatDate(u.createdAt)}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </PaginationWrapper>
       </div>
     </div>
   );

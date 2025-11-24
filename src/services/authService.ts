@@ -205,4 +205,20 @@ export class AuthService {
       throw new Error(getErrorMessage(error, 'Failed to fetch users'));
     }
   }
+
+  // Delete multiple users
+  static async deleteUsers(userIds: string[]): Promise<{
+    message: string;
+    deletedCount: number;
+    failedDeletions?: string[];
+  }> {
+    try {
+      const response = await api.delete(API_ENDPOINTS.DELETE_USERS, {
+        data: { userIds }
+      });
+      return response.data;
+    } catch (error) {
+      throw new Error(getErrorMessage(error, 'Failed to delete users'));
+    }
+  }
 }

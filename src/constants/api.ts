@@ -29,4 +29,5 @@ export const API_ENDPOINTS = {
 
   // User endpoints
   GET_ALL_USERS: '/api/auth/users',
+  DELETE_USERS: '/api/auth/users/delete',
 } as const;
