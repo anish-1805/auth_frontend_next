@@ -184,7 +184,8 @@ export class AuthService {
   // Get all users with pagination
   static async getAllUsers(
     page: number = 1,
-    limit: number = 10
+    limit: number = 10,
+    search?: string
   ): Promise<{
     users: User[];
     total: number;
@@ -193,13 +194,19 @@ export class AuthService {
     hasMore: boolean;
   }> {
     try {
-      const response = await api.get(`${API_ENDPOINTS.GET_ALL_USERS}?page=${page}&limit=${limit}`);
+      let url = `${API_ENDPOINTS.GET_ALL_USERS}?page=${page}&limit=${limit}`;
+      if (search && search.trim()) {
+        url += `&search=${encodeURIComponent(search.trim())}`;
+      }
+      const response = await api.get(url);
+      // Backend returns pagination data nested under response.data.pagination
+      const pagination = response.data.pagination || {};
       return {
         users: response.data.users || [],
-        total: response.data.total || 0,
-        page: response.data.page || page,
-        totalPages: response.data.totalPages || 1,
-        hasMore: response.data.hasMore || false,
+        total: pagination.totalItems || 0,
+        page: pagination.currentPage || page,
+        totalPages: pagination.totalPages || 1,
+        hasMore: pagination.hasMore || false,
       };
     } catch (error) {
       throw new Error(getErrorMessage(error, 'Failed to fetch users'));

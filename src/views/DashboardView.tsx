@@ -43,11 +43,19 @@ export default function DashboardView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Filter when search or filters change
+  // Reload from API when search term changes
   useEffect(() => {
-    filterAndSortUsers(debouncedSearchTerm);
+    if (initialLoadRef.current) {
+      loadInitialUsers();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedSearchTerm, authTypeFilter, statusFilter, users]);
+  }, [debouncedSearchTerm]);
+
+  // Apply client-side filters when filters or users change
+  useEffect(() => {
+    filterAndSortUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authTypeFilter, statusFilter, users]);
 
   // Clear selection when filters change
   useEffect(() => {
@@ -58,8 +66,9 @@ export default function DashboardView() {
   const loadInitialUsers = async () => {
     try {
       setIsLoading(true);
-      const response = await AuthService.getAllUsers(1, itemsPerPage);
+      const response = await AuthService.getAllUsers(1, itemsPerPage, debouncedSearchTerm);
       setUsers(response.users);
+      setFilteredUsers(response.users);
       setTotal(response.total);
       setHasMore(response.hasMore);
       setTotalPages(Math.ceil(response.total / itemsPerPage));
@@ -78,8 +87,9 @@ export default function DashboardView() {
     try {
       setIsLoading(true);
       const nextPage = page + 1;
-      const response = await AuthService.getAllUsers(nextPage, itemsPerPage);
+      const response = await AuthService.getAllUsers(nextPage, itemsPerPage, debouncedSearchTerm);
       setUsers((prev) => [...prev, ...response.users]);
+      setFilteredUsers((prev) => [...prev, ...response.users]);
       setHasMore(response.hasMore);
       setPage(nextPage);
     } catch (error) {
@@ -88,15 +98,16 @@ export default function DashboardView() {
     } finally {
       setIsLoading(false);
     }
-  }, [page, hasMore, isLoading]);
+  }, [page, hasMore, isLoading, debouncedSearchTerm]);
 
   const loadUsersForPage = useCallback(async (pageNum: number) => {
     if (isLoading) return;
 
     try {
       setIsLoading(true);
-      const response = await AuthService.getAllUsers(pageNum, itemsPerPage);
+      const response = await AuthService.getAllUsers(pageNum, itemsPerPage, debouncedSearchTerm);
       setUsers(response.users);
+      setFilteredUsers(response.users);
       setTotal(response.total);
       setHasMore(response.hasMore);
       setTotalPages(Math.ceil(response.total / itemsPerPage));
@@ -107,21 +118,14 @@ export default function DashboardView() {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading]);
+  }, [isLoading, debouncedSearchTerm]);
 
   const filterAndSortUsers = (term = '') => {
+    // Only apply client-side filters for auth type and status
+    // Search is handled by the backend API
     let filtered = users;
 
-    // Filter by search term
-    if (term) {
-      filtered = filtered.filter(
-        (u) =>
-          u.name.toLowerCase().includes(term.toLowerCase()) ||
-          u.email.toLowerCase().includes(term.toLowerCase())
-      );
-    }
-
-    // Filter by auth type
+    // Filter by auth type (client-side)
     if (authTypeFilter !== 'all') {
       filtered = filtered.filter((u) => {
         if (authTypeFilter === 'oauth') return u.isSocialLogin;
@@ -130,7 +134,7 @@ export default function DashboardView() {
       });
     }
 
-    // Filter by status
+    // Filter by status (client-side)
     if (statusFilter !== 'all') {
       filtered = filtered.filter((u) => {
         if (statusFilter === 'verified') return u.isEmailVerified;
@@ -243,7 +247,7 @@ export default function DashboardView() {
     currentPage: page,
     totalItems: total,
     totalPages,
-    hasMore: hasMore && !hasActiveFilters,
+    hasMore,
     isLoading,
   };
 
