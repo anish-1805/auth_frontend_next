@@ -221,7 +221,7 @@ export class AuthService {
   }> {
     try {
       const response = await api.delete(API_ENDPOINTS.DELETE_USERS, {
-        data: { userIds }
+        data: { userIds },
       });
       return response.data;
     } catch (error) {

@@ -7,6 +7,7 @@ export const ROUTES = {
   RESET_PASSWORD: '/reset-password',
   DASHBOARD: '/dashboard',
   PROFILE: '/profile',
+  FILE_UPLOAD: '/file-upload',
   OAUTH_CALLBACK: '/auth/callback',
 } as const;
 
@@ -19,4 +20,4 @@ export const PUBLIC_ROUTES = [
   ROUTES.OAUTH_CALLBACK,
 ] as const;
 
-export const PROTECTED_ROUTES = [ROUTES.DASHBOARD, ROUTES.PROFILE] as const;
+export const PROTECTED_ROUTES = [ROUTES.DASHBOARD, ROUTES.PROFILE, ROUTES.FILE_UPLOAD] as const;

@@ -3,22 +3,12 @@
 import { ReactNode } from 'react';
 import InfiniteScrollPagination from './InfiniteScrollPagination';
 import TabsPagination from './TabsPagination';
-import type { 
-  PaginationType, 
-  PaginationConfig, 
-  PaginationData, 
-  PaginationActions 
-} from './types';
+import type { PaginationConfig, PaginationData, PaginationActions } from './types';
 
 // Re-export types for convenience
-export type { 
-  PaginationType, 
-  PaginationConfig, 
-  PaginationData, 
-  PaginationActions 
-} from './types';
+export type { PaginationType, PaginationConfig, PaginationData, PaginationActions } from './types';
 
-interface PaginationWrapperProps<T = any> {
+interface PaginationWrapperProps<T = unknown> {
   children: ReactNode;
   config: PaginationConfig;
   data: PaginationData<T>;
@@ -29,7 +19,7 @@ interface PaginationWrapperProps<T = any> {
   className?: string;
 }
 
-export default function PaginationWrapper<T = any>({
+export default function PaginationWrapper<T = unknown>({
   children,
   config,
   data,

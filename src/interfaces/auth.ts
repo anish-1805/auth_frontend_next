@@ -1,7 +1,12 @@
-export interface User {
+// Base user interface with core required fields
+export interface BaseUser {
   id: string;
   name: string;
   email: string;
+}
+
+// Extended user interface with authentication details
+export interface User extends BaseUser {
   isEmailVerified: boolean;
   provider?: string;
   providerId?: string;
@@ -9,6 +14,12 @@ export interface User {
   isSocialLogin?: boolean;
   createdAt?: string;
   updatedAt?: string;
+}
+
+// Public user profile (for display purposes, no sensitive data)
+export interface PublicUserProfile extends BaseUser {
+  avatar?: string;
+  createdAt?: string;
 }
 
 export interface AuthState {
@@ -19,38 +30,54 @@ export interface AuthState {
   isInitialized: boolean;
 }
 
-export interface LoginFormData {
+// Base credentials interface
+export interface BaseCredentials {
   email: string;
   password: string;
 }
 
-export interface SignupFormData {
+// Login form extends base credentials
+export type LoginFormData = BaseCredentials;
+
+// Signup form extends base credentials with additional fields
+export interface SignupFormData extends BaseCredentials {
   name: string;
-  email: string;
-  password: string;
   confirmPassword: string;
 }
 
-export interface SignupRequestData {
+// Signup request (what gets sent to API) extends base credentials
+export interface SignupRequestData extends BaseCredentials {
   name: string;
-  email: string;
-  password: string;
 }
 
-export interface OTPVerificationData {
+// Base OTP verification interface
+export interface BaseOTPData {
   email: string;
   otp: string;
 }
 
-export interface PasswordResetData {
-  email: string;
-  otp: string;
+// OTP verification extends base
+export type OTPVerificationData = BaseOTPData;
+
+// Password reset extends OTP verification with new password
+export interface PasswordResetData extends BaseOTPData {
   newPassword: string;
 }
 
-export interface AuthResponse {
+// Base API response interface
+export interface BaseApiResponse {
   success: boolean;
   message?: string;
+  error?: string;
+}
+
+// Generic API response with data
+export interface ApiResponse<T = unknown> extends BaseApiResponse {
+  data?: T;
+}
+
+// Authentication response extends base with user data
+export interface AuthResponse extends BaseApiResponse {
   user?: User;
   data?: {
     token?: string;
@@ -61,15 +88,29 @@ export interface AuthResponse {
     hasMore?: boolean;
     [key: string]: string | number | boolean | User[] | undefined;
   };
-  error?: string;
 }
 
-export interface ChangePasswordData {
-  currentPassword: string;
+// Paginated response interface
+export interface PaginatedResponse<T> extends BaseApiResponse {
+  data: T[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    itemsPerPage: number;
+    hasMore: boolean;
+  };
+}
+
+// Base password data
+export interface BasePasswordData {
   newPassword: string;
 }
 
-export interface UpdateProfileData {
-  name?: string;
-  email?: string;
+// Change password extends base with current password
+export interface ChangePasswordData extends BasePasswordData {
+  currentPassword: string;
 }
+
+// Update profile data (partial user update)
+export type UpdateProfileData = Partial<Pick<BaseUser, 'name' | 'email'>>;

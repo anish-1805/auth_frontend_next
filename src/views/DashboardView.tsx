@@ -10,7 +10,13 @@ import { AuthService } from '@/services/authService';
 import { User } from '@/interfaces/auth';
 import { formatDate } from '@/utilities/formatDate';
 import { ROUTES } from '@/constants/routes';
-import { PaginationWrapper, PaginationConfig, PaginationData, PaginationActions, PaginationType } from '@/components/pagination';
+import {
+  PaginationWrapper,
+  PaginationConfig,
+  PaginationData,
+  PaginationActions,
+  PaginationType,
+} from '@/components/pagination';
 import styles from '@/styles/DashboardTable.module.css';
 
 export default function DashboardView() {
@@ -100,27 +106,30 @@ export default function DashboardView() {
     }
   }, [page, hasMore, isLoading, debouncedSearchTerm]);
 
-  const loadUsersForPage = useCallback(async (pageNum: number) => {
-    if (isLoading) return;
+  const loadUsersForPage = useCallback(
+    async (pageNum: number) => {
+      if (isLoading) return;
 
-    try {
-      setIsLoading(true);
-      const response = await AuthService.getAllUsers(pageNum, itemsPerPage, debouncedSearchTerm);
-      setUsers(response.users);
-      setFilteredUsers(response.users);
-      setTotal(response.total);
-      setHasMore(response.hasMore);
-      setTotalPages(Math.ceil(response.total / itemsPerPage));
-      setPage(pageNum);
-    } catch (error) {
-      toast.error('Failed to load users');
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [isLoading, debouncedSearchTerm]);
+      try {
+        setIsLoading(true);
+        const response = await AuthService.getAllUsers(pageNum, itemsPerPage, debouncedSearchTerm);
+        setUsers(response.users);
+        setFilteredUsers(response.users);
+        setTotal(response.total);
+        setHasMore(response.hasMore);
+        setTotalPages(Math.ceil(response.total / itemsPerPage));
+        setPage(pageNum);
+      } catch (error) {
+        toast.error('Failed to load users');
+        console.error(error);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [isLoading, debouncedSearchTerm]
+  );
 
-  const filterAndSortUsers = (term = '') => {
+  const filterAndSortUsers = () => {
     // Only apply client-side filters for auth type and status
     // Search is handled by the backend API
     let filtered = users;
@@ -164,7 +173,7 @@ export default function DashboardView() {
 
   // Selection handlers
   const handleSelectUser = (userId: string) => {
-    setSelectedUsers(prev => {
+    setSelectedUsers((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(userId)) {
         newSet.delete(userId);
@@ -179,7 +188,7 @@ export default function DashboardView() {
     if (selectedUsers.size === filteredUsers.length) {
       setSelectedUsers(new Set());
     } else {
-      setSelectedUsers(new Set(filteredUsers.map(user => user.id)));
+      setSelectedUsers(new Set(filteredUsers.map((user) => user.id)));
     }
   };
 
@@ -201,16 +210,16 @@ export default function DashboardView() {
       setIsDeleting(true);
       const userIdsArray = Array.from(selectedUsers);
       const result = await AuthService.deleteUsers(userIdsArray);
-      
+
       toast.success(`Successfully deleted ${result.deletedCount} user(s)`);
-      
+
       if (result.failedDeletions && result.failedDeletions.length > 0) {
         toast.warning(`Failed to delete ${result.failedDeletions.length} user(s)`);
       }
 
       // Clear selection and refresh data
       clearSelection();
-      
+
       // Refresh current page or go back if current page is empty
       if (paginationType === 'tabs') {
         const remainingUsers = filteredUsers.length - result.deletedCount;
@@ -230,8 +239,7 @@ export default function DashboardView() {
     }
   };
 
-  const hasActiveFilters =
-    searchTerm !== '' || authTypeFilter !== 'all' || statusFilter !== 'all';
+  const hasActiveFilters = searchTerm !== '' || authTypeFilter !== 'all' || statusFilter !== 'all';
 
   // Pagination configuration
   const paginationConfig: PaginationConfig = {
@@ -241,8 +249,8 @@ export default function DashboardView() {
     showJumpToPage: true,
   };
 
-  // Pagination data
-  const paginationData: PaginationData = {
+  // Pagination data with type safety
+  const paginationData: PaginationData<User> = {
     items: filteredUsers,
     currentPage: page,
     totalItems: total,
@@ -290,9 +298,17 @@ export default function DashboardView() {
           <h1>Dashboard</h1>
           <p className={styles.userCount}>Welcome back, {user?.name}!</p>
         </div>
-        <button onClick={handleLogout} className={styles.logoutButton}>
-          Logout
-        </button>
+        <div className={styles.headerRight}>
+          <button
+            onClick={() => router.push(ROUTES.FILE_UPLOAD)}
+            className={styles.fileUploadButton}
+          >
+            📤 Upload Files
+          </button>
+          <button onClick={handleLogout} className={styles.logoutButton}>
+            Logout
+          </button>
+        </div>
       </div>
 
       {/* Current User Info Card */}
@@ -356,15 +372,14 @@ export default function DashboardView() {
       <div className={styles.sectionHeader}>
         <div className={styles.sectionHeaderLeft}>
           <h2>
-            All Users ({paginationType === 'tabs' && !hasActiveFilters 
+            All Users (
+            {paginationType === 'tabs' && !hasActiveFilters
               ? `${Math.min(page * itemsPerPage, total)} of ${total}`
-              : filteredUsers.length + (filteredUsers.length !== total ? ` of ${total}` : '')
-            })
+              : filteredUsers.length + (filteredUsers.length !== total ? ` of ${total}` : '')}
+            )
           </h2>
           {selectedUsers.size > 0 && (
-            <span className={styles.selectionInfo}>
-              {selectedUsers.size} user(s) selected
-            </span>
+            <span className={styles.selectionInfo}>{selectedUsers.size} user(s) selected</span>
           )}
         </div>
         {selectedUsers.size > 0 && (
@@ -465,7 +480,9 @@ export default function DashboardView() {
                 <th className={styles.checkboxColumn}>
                   <input
                     type="checkbox"
-                    checked={filteredUsers.length > 0 && selectedUsers.size === filteredUsers.length}
+                    checked={
+                      filteredUsers.length > 0 && selectedUsers.size === filteredUsers.length
+                    }
                     onChange={handleSelectAll}
                     className={styles.selectAllCheckbox}
                     disabled={filteredUsers.length === 0}

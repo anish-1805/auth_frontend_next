@@ -109,9 +109,7 @@ function TabsPagination({
                 key={page}
                 onClick={() => actions.goToPage(page)}
                 disabled={data.isLoading}
-                className={`${styles.pageButton} ${
-                  page === data.currentPage ? styles.active : ''
-                }`}
+                className={`${styles.pageButton} ${page === data.currentPage ? styles.active : ''}`}
               >
                 {page}
               </button>

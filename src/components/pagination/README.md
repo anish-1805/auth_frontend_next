@@ -5,18 +5,26 @@ A modular pagination system that supports both infinite scroll and tabs paginati
 ## Components
 
 ### PaginationWrapper
+
 Main wrapper component that switches between pagination types.
 
 ### InfiniteScrollPagination
+
 Provides infinite scroll functionality with intersection observer.
 
 ### TabsPagination
+
 Provides traditional page-based navigation with page numbers, jump-to-page, and navigation controls.
 
 ## Usage
 
 ```tsx
-import { PaginationWrapper, PaginationConfig, PaginationData, PaginationActions } from '@/components/pagination';
+import {
+  PaginationWrapper,
+  PaginationConfig,
+  PaginationData,
+  PaginationActions,
+} from '@/components/pagination';
 
 // Configuration
 const paginationConfig: PaginationConfig = {
@@ -38,11 +46,21 @@ const paginationData: PaginationData = {
 
 // Actions
 const paginationActions: PaginationActions = {
-  loadMore: () => { /* load more items */ },
-  goToPage: (page) => { /* go to specific page */ },
-  nextPage: () => { /* go to next page */ },
-  prevPage: () => { /* go to previous page */ },
-  refresh: () => { /* refresh current data */ },
+  loadMore: () => {
+    /* load more items */
+  },
+  goToPage: (page) => {
+    /* go to specific page */
+  },
+  nextPage: () => {
+    /* go to next page */
+  },
+  prevPage: () => {
+    /* go to previous page */
+  },
+  refresh: () => {
+    /* refresh current data */
+  },
 };
 
 // Usage
@@ -56,7 +74,7 @@ const paginationActions: PaginationActions = {
 >
   {/* Your content here */}
   <YourDataComponent items={paginationData.items} />
-</PaginationWrapper>
+</PaginationWrapper>;
 ```
 
 ## Switching Between Pagination Types
@@ -72,18 +90,19 @@ const config: PaginationConfig = {
 };
 
 // Toggle component
-<select 
-  value={paginationType} 
+<select
+  value={paginationType}
   onChange={(e) => setPaginationType(e.target.value as PaginationType)}
 >
   <option value="tabs">Tabs Pagination</option>
   <option value="infinite">Infinite Scroll</option>
-</select>
+</select>;
 ```
 
 ## Features
 
 ### Tabs Pagination
+
 - Page navigation with previous/next buttons
 - Numbered page buttons with smart ellipsis
 - Jump to specific page functionality
@@ -91,6 +110,7 @@ const config: PaginationConfig = {
 - Responsive design
 
 ### Infinite Scroll
+
 - Intersection Observer for performance
 - Configurable threshold
 - Loading states
@@ -101,9 +121,9 @@ const config: PaginationConfig = {
 ```tsx
 interface PaginationConfig {
   type: 'infinite' | 'tabs';
-  itemsPerPage?: number;        // Items per page (for tabs mode)
-  showPageInfo?: boolean;       // Show page information
-  showJumpToPage?: boolean;     // Show jump to page input
+  itemsPerPage?: number; // Items per page (for tabs mode)
+  showPageInfo?: boolean; // Show page information
+  showJumpToPage?: boolean; // Show jump to page input
 }
 ```
 
@@ -111,12 +131,12 @@ interface PaginationConfig {
 
 ```tsx
 interface PaginationData<T = any> {
-  items: T[];                   // Current items to display
-  currentPage: number;          // Current page number
-  totalItems: number;           // Total number of items
-  totalPages: number;           // Total number of pages
-  hasMore: boolean;             // Whether more items are available
-  isLoading: boolean;           // Loading state
+  items: T[]; // Current items to display
+  currentPage: number; // Current page number
+  totalItems: number; // Total number of items
+  totalPages: number; // Total number of pages
+  hasMore: boolean; // Whether more items are available
+  isLoading: boolean; // Loading state
 }
 ```
 
@@ -124,10 +144,10 @@ interface PaginationData<T = any> {
 
 ```tsx
 interface PaginationActions {
-  loadMore: () => void;         // Load more items (infinite scroll)
-  goToPage: (page: number) => void;  // Go to specific page
-  nextPage: () => void;         // Go to next page
-  prevPage: () => void;         // Go to previous page
-  refresh: () => void;          // Refresh current data
+  loadMore: () => void; // Load more items (infinite scroll)
+  goToPage: (page: number) => void; // Go to specific page
+  nextPage: () => void; // Go to next page
+  prevPage: () => void; // Go to previous page
+  refresh: () => void; // Refresh current data
 }
 ```

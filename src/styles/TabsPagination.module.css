@@ -136,26 +136,26 @@
   .paginationContainer {
     padding: 16px;
   }
-  
+
   .paginationControls {
     gap: 4px;
   }
-  
+
   .pageButton {
     padding: 6px 8px;
     font-size: 13px;
     min-width: 32px;
   }
-  
+
   .pageButton.prevNext {
     padding: 6px 12px;
   }
-  
+
   .jumpToPage {
     flex-direction: column;
     gap: 8px;
   }
-  
+
   .pageInfo {
     font-size: 13px;
   }

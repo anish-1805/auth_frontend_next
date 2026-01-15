@@ -65,9 +65,7 @@ function InfiniteScrollPagination({
       )}
 
       {!data.hasMore && !data.isLoading && endMessage && (
-        <div style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>
-          {endMessage}
-        </div>
+        <div style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>{endMessage}</div>
       )}
     </div>
   );

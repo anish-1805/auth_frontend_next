@@ -99,7 +99,13 @@ export default function ResetPasswordView() {
         setServerError('');
       }
     }
-  }, [watchedValues.newPassword, watchedValues.confirmPassword, clearErrors, serverError, currentStep]);
+  }, [
+    watchedValues.newPassword,
+    watchedValues.confirmPassword,
+    clearErrors,
+    serverError,
+    currentStep,
+  ]);
 
   // Handle OTP verification
   const handleOTPComplete = async (otp: string) => {
@@ -166,7 +172,10 @@ export default function ResetPasswordView() {
         error instanceof Error ? error.message : 'Failed to reset password. Please try again.';
       setServerError(errorMessage);
 
-      if (errorMessage.toLowerCase().includes('expired') || errorMessage.toLowerCase().includes('invalid')) {
+      if (
+        errorMessage.toLowerCase().includes('expired') ||
+        errorMessage.toLowerCase().includes('invalid')
+      ) {
         toast.error('🔄 Reset code expired. Please request a new one.');
         setCurrentStep('otp');
         setVerifiedOTP('');
@@ -190,12 +199,16 @@ export default function ResetPasswordView() {
       <div className={styles.authCard}>
         {/* Progress indicator */}
         <div className={styles.progressIndicator}>
-          <div className={`${styles.progressStep} ${currentStep === 'otp' ? styles.active : styles.completed}`}>
+          <div
+            className={`${styles.progressStep} ${currentStep === 'otp' ? styles.active : styles.completed}`}
+          >
             <span className={styles.stepNumber}>1</span>
             <span className={styles.stepLabel}>Verify Code</span>
           </div>
           <div className={styles.progressLine}></div>
-          <div className={`${styles.progressStep} ${currentStep === 'password' ? styles.active : ''}`}>
+          <div
+            className={`${styles.progressStep} ${currentStep === 'password' ? styles.active : ''}`}
+          >
             <span className={styles.stepNumber}>2</span>
             <span className={styles.stepLabel}>New Password</span>
           </div>
@@ -241,7 +254,8 @@ export default function ResetPasswordView() {
                   ) : !canResend && countdown > 0 ? (
                     <>
                       <span className={styles.resendIcon}>⏱️</span>
-                      Resend in {Math.floor(countdown / 60)}:{String(countdown % 60).padStart(2, '0')}
+                      Resend in {Math.floor(countdown / 60)}:
+                      {String(countdown % 60).padStart(2, '0')}
                     </>
                   ) : (
                     <>
@@ -309,8 +323,8 @@ export default function ResetPasswordView() {
                 )}
                 <div className={styles.passwordRequirements}>
                   <small>
-                    Password must contain at least 8 characters with uppercase, lowercase, number, and special
-                    character.
+                    Password must contain at least 8 characters with uppercase, lowercase, number,
+                    and special character.
                   </small>
                 </div>
               </div>
