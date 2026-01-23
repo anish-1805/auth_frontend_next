@@ -199,14 +199,13 @@ export class AuthService {
         url += `&search=${encodeURIComponent(search.trim())}`;
       }
       const response = await api.get(url);
-      // Backend returns pagination data nested under response.data.pagination
-      const pagination = response.data.pagination || {};
+      // Backend returns pagination data directly in response.data
       return {
         users: response.data.users || [],
-        total: pagination.totalItems || 0,
-        page: pagination.currentPage || page,
-        totalPages: pagination.totalPages || 1,
-        hasMore: pagination.hasMore || false,
+        total: response.data.total || 0,
+        page: response.data.page || page,
+        totalPages: response.data.totalPages || 1,
+        hasMore: response.data.hasMore || false,
       };
     } catch (error) {
       throw new Error(getErrorMessage(error, 'Failed to fetch users'));

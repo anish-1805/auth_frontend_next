@@ -11,12 +11,14 @@ import { LoginFormData } from '@/interfaces/auth';
 import { ROUTES } from '@/constants/routes';
 import Link from 'next/link';
 import GoogleLoginButton from '@/components/GoogleLoginButton';
+import { useTranslation } from '@/hooks/useTranslation';
 import styles from '@/styles/AuthForms.module.css';
 
 export default function LoginView() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login } = useAuth();
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [serverError, setServerError] = useState<string>('');
 
@@ -57,20 +59,20 @@ export default function LoginView() {
 
     try {
       await login(data);
-      toast.success('Login successful! Welcome back!');
+      toast.success(t('messages.loginSuccess'));
       router.push(redirect);
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : 'Login failed. Please check your credentials.';
+        error instanceof Error ? error.message : t('messages.loginFailed');
 
       if (
         errorMessage.toLowerCase().includes('password') ||
         errorMessage.toLowerCase().includes('invalid email or password') ||
         errorMessage.toLowerCase().includes('credentials')
       ) {
-        toast.error('❌ Wrong password! Please check your credentials and try again.');
+        toast.error(t('messages.wrongPassword'));
       } else if (errorMessage.toLowerCase().includes('email')) {
-        toast.error('📧 Email not found! Please check your email address.');
+        toast.error(t('messages.emailNotFound'));
       } else {
         toast.error(`⚠️ ${errorMessage}`);
       }
@@ -85,8 +87,8 @@ export default function LoginView() {
     <div className={styles.authContainer}>
       <div className={styles.authCard}>
         <div className={styles.authHeader}>
-          <h1>Welcome Back</h1>
-          <p>Sign in to your account</p>
+          <h1>{t('auth.welcomeBack')}</h1>
+          <p>{t('auth.signInToAccount')}</p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className={styles.authForm}>
@@ -96,13 +98,13 @@ export default function LoginView() {
 
           <div className={styles.formGroup}>
             <label htmlFor="email" className={styles.formLabel}>
-              Email Address
+              {t('auth.email')}
             </label>
             <input
               id="email"
               type="email"
               className={`${styles.formInput} ${errors.email ? styles.error : ''}`}
-              placeholder="Enter your email"
+              placeholder={t('placeholders.email')}
               {...register('email')}
             />
             {errors.email && <span className={styles.errorMessage}>{errors.email.message}</span>}
@@ -110,13 +112,13 @@ export default function LoginView() {
 
           <div className={styles.formGroup}>
             <label htmlFor="password" className={styles.formLabel}>
-              Password
+              {t('auth.password')}
             </label>
             <input
               id="password"
               type="password"
               className={`${styles.formInput} ${errors.password ? styles.error : ''}`}
-              placeholder="Enter your password"
+              placeholder={t('placeholders.password')}
               {...register('password')}
             />
             {errors.password && (
@@ -126,16 +128,16 @@ export default function LoginView() {
 
           <div className={styles.formOptions}>
             <Link href={ROUTES.FORGOT_PASSWORD} className={styles.forgotPasswordLink}>
-              <span>🔑</span> Forgot your password?
+              <span>🔑</span> {t('auth.forgotPassword')}
             </Link>
           </div>
 
           <button type="submit" className={styles.authButton} disabled={isLoading || !isValid}>
-            {isLoading ? 'Signing In...' : 'Sign In'}
+            {isLoading ? t('auth.signingIn') : t('auth.login')}
           </button>
 
           <div className={styles.authDivider}>
-            <span>OR</span>
+            <span>{t('common.or')}</span>
           </div>
 
           <GoogleLoginButton mode="login" isLoading={isLoading} />
@@ -143,9 +145,9 @@ export default function LoginView() {
 
         <div className={styles.authFooter}>
           <p>
-            Don&apos;t have an account?{' '}
+            {t('auth.dontHaveAccount')}{' '}
             <Link href={ROUTES.SIGNUP} className={styles.authLink}>
-              Sign Up
+              {t('auth.signup')}
             </Link>
           </p>
         </div>

@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { ROUTES } from '@/constants/routes';
 import OTPInput from '@/components/OTPInput';
 import Link from 'next/link';
+import { useTranslation } from '@/hooks/useTranslation';
 import styles from '@/styles/AuthForms.module.css';
 
 type ResetStep = 'otp' | 'password';
@@ -36,6 +37,7 @@ export default function ResetPasswordView() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { resetPassword } = useAuth();
+  const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState<ResetStep>('otp');
   const [isLoading, setIsLoading] = useState(false);
   const [isResending, setIsResending] = useState(false);
@@ -118,10 +120,10 @@ export default function ResetPasswordView() {
       setVerifiedOTP(otp);
       setCurrentStep('password');
 
-      toast.success('✅ Code verified! Now create your new password.');
+      toast.success(t('messages.codeVerified'));
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : 'Invalid or expired code. Please try again.';
+        error instanceof Error ? error.message : t('messages.invalidCode');
       setError(errorMessage);
       toast.error(`❌ ${errorMessage}`);
     } finally {
@@ -142,9 +144,9 @@ export default function ResetPasswordView() {
 
       setCountdown(OTP_EXPIRY_TIME);
 
-      toast.success('📧 New reset code sent to your email!');
+      toast.success(t('messages.newResetCodeSent'));
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to resend reset code.';
+      const errorMessage = error instanceof Error ? error.message : t('messages.passwordResetFailed');
       setError(errorMessage);
       setCanResend(true);
       toast.error(`⚠️ ${errorMessage}`);
@@ -165,18 +167,18 @@ export default function ResetPasswordView() {
         newPassword: data.newPassword,
       });
 
-      toast.success('🎉 Password reset successfully! You can now log in with your new password.');
+      toast.success(t('messages.passwordResetSuccess'));
       router.push(ROUTES.LOGIN);
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : 'Failed to reset password. Please try again.';
+        error instanceof Error ? error.message : t('messages.passwordResetFailed');
       setServerError(errorMessage);
 
       if (
         errorMessage.toLowerCase().includes('expired') ||
         errorMessage.toLowerCase().includes('invalid')
       ) {
-        toast.error('🔄 Reset code expired. Please request a new one.');
+        toast.error(t('messages.codeExpired'));
         setCurrentStep('otp');
         setVerifiedOTP('');
       } else {
@@ -203,14 +205,14 @@ export default function ResetPasswordView() {
             className={`${styles.progressStep} ${currentStep === 'otp' ? styles.active : styles.completed}`}
           >
             <span className={styles.stepNumber}>1</span>
-            <span className={styles.stepLabel}>Verify Code</span>
+            <span className={styles.stepLabel}>{t('resetPassword.progressStep1')}</span>
           </div>
           <div className={styles.progressLine}></div>
           <div
             className={`${styles.progressStep} ${currentStep === 'password' ? styles.active : ''}`}
           >
             <span className={styles.stepNumber}>2</span>
-            <span className={styles.stepLabel}>New Password</span>
+            <span className={styles.stepLabel}>{t('resetPassword.progressStep2')}</span>
           </div>
         </div>
 
@@ -219,8 +221,8 @@ export default function ResetPasswordView() {
           <>
             <div className={styles.authHeader}>
               <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔐</div>
-              <h1>Enter Reset Code</h1>
-              <p>We&apos;ve sent a 6-digit reset code to</p>
+              <h1>{t('auth.enterResetCode')}</h1>
+              <p>{t('resetPassword.sentCodeTo')}</p>
               <div className={styles.emailDisplay}>
                 <strong>{email}</strong>
               </div>
@@ -228,7 +230,7 @@ export default function ResetPasswordView() {
 
             <div className={styles.verificationContent}>
               <div className={styles.verificationInstructions}>
-                <p>Enter the reset code to verify your identity:</p>
+                <p>{t('resetPassword.enterCodeInstructions')}</p>
               </div>
 
               <OTPInput
@@ -249,18 +251,17 @@ export default function ResetPasswordView() {
                   {isResending ? (
                     <>
                       <span className={styles.spinner}></span>
-                      Sending...
+                      {t('auth.sending')}
                     </>
                   ) : !canResend && countdown > 0 ? (
                     <>
                       <span className={styles.resendIcon}>⏱️</span>
-                      Resend in {Math.floor(countdown / 60)}:
-                      {String(countdown % 60).padStart(2, '0')}
+                      {t('auth.resendIn')} {Math.floor(countdown / 60)}:{String(countdown % 60).padStart(2, '0')}
                     </>
                   ) : (
                     <>
                       <span className={styles.resendIcon}>🔄</span>
-                      Resend Code
+                      {t('auth.resendCode')}
                     </>
                   )}
                 </button>
@@ -284,8 +285,8 @@ export default function ResetPasswordView() {
           <>
             <div className={styles.authHeader}>
               <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔐</div>
-              <h1>Create New Password</h1>
-              <p>Enter a strong new password for your account</p>
+              <h1>{t('resetPassword.createNewPassword')}</h1>
+              <p>{t('resetPassword.enterNewPassword')}</p>
               <div className={styles.emailDisplay}>
                 <strong>{email}</strong>
               </div>
@@ -300,14 +301,14 @@ export default function ResetPasswordView() {
 
               <div className={styles.formGroup}>
                 <label htmlFor="newPassword" className={styles.formLabel}>
-                  <span>🔒</span> New Password
+                  <span>🔒</span> {t('auth.newPassword')}
                 </label>
                 <div className={styles.passwordInputContainer}>
                   <input
                     id="newPassword"
                     type={showPassword ? 'text' : 'password'}
                     className={`${styles.formInput} ${errors.newPassword ? styles.error : ''}`}
-                    placeholder="Enter your new password"
+                    placeholder={t('resetPassword.newPasswordPlaceholder')}
                     {...register('newPassword')}
                   />
                   <button
@@ -323,22 +324,21 @@ export default function ResetPasswordView() {
                 )}
                 <div className={styles.passwordRequirements}>
                   <small>
-                    Password must contain at least 8 characters with uppercase, lowercase, number,
-                    and special character.
+                    {t('validation.passwordRequirements')}
                   </small>
                 </div>
               </div>
 
               <div className={styles.formGroup}>
                 <label htmlFor="confirmPassword" className={styles.formLabel}>
-                  <span>🔒</span> Confirm New Password
+                  <span>🔒</span> {t('auth.confirmPassword')}
                 </label>
                 <div className={styles.passwordInputContainer}>
                   <input
                     id="confirmPassword"
                     type={showConfirmPassword ? 'text' : 'password'}
                     className={`${styles.formInput} ${errors.confirmPassword ? styles.error : ''}`}
-                    placeholder="Confirm your new password"
+                    placeholder={t('resetPassword.confirmPasswordPlaceholder')}
                     {...register('confirmPassword')}
                   />
                   <button
@@ -356,7 +356,7 @@ export default function ResetPasswordView() {
 
               <div className={styles.formActions}>
                 <button type="button" onClick={goBackToOTP} className={styles.backButton}>
-                  ← Back to Code
+                  {t('resetPassword.backToCode')}
                 </button>
 
                 <button
@@ -368,11 +368,11 @@ export default function ResetPasswordView() {
                   {isLoading ? (
                     <>
                       <span className={styles.spinner}></span>
-                      Resetting...
+                      {t('resetPassword.resetting')}
                     </>
                   ) : (
                     <>
-                      <span>🔐</span> Reset Password
+                      <span>🔐</span> {t('resetPassword.resetButton')}
                     </>
                   )}
                 </button>
@@ -395,15 +395,15 @@ export default function ResetPasswordView() {
 
         <div className={styles.authFooter}>
           <p>
-            Wrong email?{' '}
+            {t('auth.wrongEmail')}{' '}
             <Link href={ROUTES.FORGOT_PASSWORD} className={styles.linkButton}>
-              Try different email
+              {t('auth.forgotPassword')}
             </Link>
           </p>
           <p style={{ marginTop: '8px' }}>
-            Remember your password?{' '}
+            {t('auth.rememberPassword')}{' '}
             <Link href={ROUTES.LOGIN} className={styles.authLink}>
-              <span>🔐</span> Sign In
+              <span>🔐</span> {t('auth.login')}
             </Link>
           </p>
         </div>

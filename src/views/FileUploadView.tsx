@@ -1,9 +1,11 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import FileService, { FileStats } from '@/services/fileService';
+import { useTranslation } from '@/hooks/useTranslation';
 import styles from '@/components/FileUpload/FileUpload.module.css';
 
 export default function FileUploadView() {
+  const { t } = useTranslation();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -116,11 +118,11 @@ export default function FileUploadView() {
   };
 
   const handleDeleteFile = async (fileName: string) => {
-    if (!confirm(`Are you sure you want to delete ${fileName}?`)) return;
+    if (!confirm(t('fileUpload.deleteConfirm', { fileName }))) return;
 
     try {
       await FileService.deleteFile(fileName);
-      toast.success('File deleted successfully');
+      toast.success(t('fileUpload.deleteSuccess'));
       await loadUploadedFiles();
 
       // Clear stats if deleted file was the last uploaded one
@@ -147,7 +149,7 @@ export default function FileUploadView() {
       {/* Upload Card */}
       <div className={styles.uploadCard}>
         <div className={styles.uploadHeader}>
-          <h1>📄 PDF File Upload</h1>
+          <h1>📄 {t('fileUpload.uploadPDF')}</h1>
           <p>Upload PDF files and analyze them using memory-efficient generators</p>
         </div>
 
@@ -164,10 +166,10 @@ export default function FileUploadView() {
         >
           <div className={styles.uploadIcon}>📤</div>
           <div className={styles.dropzoneText}>
-            <h3>Drag & Drop your PDF file here</h3>
-            <p>or</p>
+            <h3>{t('fileUpload.dragAndDrop')}</h3>
+            <p>{t('common.or')}</p>
             <button className={styles.browseButton} disabled={isUploading}>
-              Browse Files
+              {t('fileUpload.browseFiles')}
             </button>
             <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#999' }}>
               Supported format: PDF (Max 10MB)
@@ -198,7 +200,7 @@ export default function FileUploadView() {
               onClick={handleRemoveFile}
               disabled={isUploading}
             >
-              Remove
+              {t('fileUpload.remove')}
             </button>
           </div>
         )}
@@ -209,12 +211,12 @@ export default function FileUploadView() {
             {isUploading ? (
               <>
                 <div className={styles.spinner}></div>
-                Uploading & Analyzing...
+                {t('fileUpload.uploading')}
               </>
             ) : (
               <>
                 <span>🚀</span>
-                Upload & Analyze File
+                {t('fileUpload.upload')}
               </>
             )}
           </button>
@@ -277,31 +279,31 @@ export default function FileUploadView() {
       {/* Uploaded Files List */}
       <div className={styles.filesList}>
         <div className={styles.filesHeader}>
-          <h2>📁 Your Uploaded Files ({uploadedFiles.length})</h2>
+          <h2>📊 {t('fileUpload.uploadedFiles')} ({uploadedFiles.length})</h2>
           <button className={styles.refreshButton} onClick={loadUploadedFiles}>
-            🔄 Refresh
+            🔄 {t('fileUpload.refresh')}
           </button>
         </div>
 
         {isLoadingFiles ? (
           <div className={styles.emptyState}>
             <div className={styles.spinner} style={{ margin: '0 auto' }}></div>
-            <p>Loading files...</p>
+            <p>{t('fileUpload.loadingFiles')}</p>
           </div>
         ) : uploadedFiles.length === 0 ? (
           <div className={styles.emptyState}>
             <div style={{ fontSize: '3rem' }}>📭</div>
-            <p>No files uploaded yet. Upload your first PDF file above!</p>
+            <p>{t('fileUpload.noFiles')}</p>
           </div>
         ) : (
           <table className={styles.filesTable}>
             <thead>
               <tr>
-                <th>File Name</th>
-                <th>Size</th>
+                <th>{t('fileUpload.fileName')}</th>
+                <th>{t('fileUpload.fileSize')}</th>
                 <th>Chunks</th>
                 <th>Type</th>
-                <th>Actions</th>
+                <th>{t('dashboard.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -316,7 +318,7 @@ export default function FileUploadView() {
                       className={styles.deleteFileButton}
                       onClick={() => handleDeleteFile(file.file_name)}
                     >
-                      🗑️ Delete
+                      🗑️ {t('common.delete')}
                     </button>
                   </td>
                 </tr>

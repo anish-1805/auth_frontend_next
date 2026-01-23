@@ -1,12 +1,14 @@
 'use client';
 
-import { ReactNode } from 'react';
-import InfiniteScrollPagination from './InfiniteScrollPagination';
-import TabsPagination from './TabsPagination';
+import { ReactNode, Suspense, lazy } from 'react';
 import type { PaginationConfig, PaginationData, PaginationActions } from './types';
 
 // Re-export types for convenience
 export type { PaginationType, PaginationConfig, PaginationData, PaginationActions } from './types';
+
+// Lazy load pagination components
+const InfiniteScrollPagination = lazy(() => import('./InfiniteScrollPagination'));
+const TabsPagination = lazy(() => import('./TabsPagination'));
 
 interface PaginationWrapperProps<T = unknown> {
   children: ReactNode;
@@ -34,32 +36,43 @@ export default function PaginationWrapper<T = unknown>({
     return <div className={className}>{emptyMessage}</div>;
   }
 
+  // Default loading fallback
+  const loadingFallback = (
+    <div className={className} style={{ padding: '2rem', textAlign: 'center' }}>
+      <div>Loading pagination...</div>
+    </div>
+  );
+
   // Render based on pagination type
   switch (config.type) {
     case 'infinite':
       return (
-        <InfiniteScrollPagination
-          data={data}
-          actions={actions}
-          loader={loader}
-          endMessage={endMessage}
-          className={className}
-        >
-          {children}
-        </InfiniteScrollPagination>
+        <Suspense fallback={loadingFallback}>
+          <InfiniteScrollPagination
+            data={data}
+            actions={actions}
+            loader={loader}
+            endMessage={endMessage}
+            className={className}
+          >
+            {children}
+          </InfiniteScrollPagination>
+        </Suspense>
       );
 
     case 'tabs':
       return (
-        <TabsPagination
-          data={data}
-          actions={actions}
-          config={config}
-          loader={loader}
-          className={className}
-        >
-          {children}
-        </TabsPagination>
+        <Suspense fallback={loadingFallback}>
+          <TabsPagination
+            data={data}
+            actions={actions}
+            config={config}
+            loader={loader}
+            className={className}
+          >
+            {children}
+          </TabsPagination>
+        </Suspense>
       );
 
     default:

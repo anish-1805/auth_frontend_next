@@ -11,10 +11,12 @@ import { SignupFormData } from '@/interfaces/auth';
 import { ROUTES } from '@/constants/routes';
 import Link from 'next/link';
 import GoogleLoginButton from '@/components/GoogleLoginButton';
+import { useTranslation } from '@/hooks/useTranslation';
 import styles from '@/styles/AuthForms.module.css';
 
 export default function SignupView() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [serverError, setServerError] = useState<string>('');
 
@@ -66,18 +68,18 @@ export default function SignupView() {
 
       if (response.success) {
         reset();
-        toast.success('🎉 Account created successfully! Please verify your email.');
+        toast.success(t('messages.signupSuccess'));
         router.push(`${ROUTES.VERIFY_EMAIL}?email=${encodeURIComponent(signupData.email)}`);
       }
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : 'Signup failed. Please try again.';
+        error instanceof Error ? error.message : t('messages.signupFailed');
 
       if (
         errorMessage.toLowerCase().includes('email') &&
         errorMessage.toLowerCase().includes('exists')
       ) {
-        toast.error('📧 Email already exists! Please use a different email or try logging in.');
+        toast.error(t('messages.emailExists'));
       } else {
         toast.error(`⚠️ ${errorMessage}`);
       }
@@ -92,8 +94,8 @@ export default function SignupView() {
     <div className={styles.authContainer}>
       <div className={styles.authCard}>
         <div className={styles.authHeader}>
-          <h1>Create Account</h1>
-          <p>Sign up to get started</p>
+          <h1>{t('auth.createAccount')}</h1>
+          <p>{t('auth.signUpToGetStarted')}</p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className={styles.authForm}>
@@ -103,13 +105,13 @@ export default function SignupView() {
 
           <div className={styles.formGroup}>
             <label htmlFor="name" className={styles.formLabel}>
-              Full Name
+              {t('auth.name')}
             </label>
             <input
               id="name"
               type="text"
               className={`${styles.formInput} ${errors.name ? styles.error : ''}`}
-              placeholder="Enter your full name"
+              placeholder={t('placeholders.name')}
               {...register('name')}
             />
             {errors.name && <span className={styles.errorMessage}>{errors.name.message}</span>}
@@ -117,13 +119,13 @@ export default function SignupView() {
 
           <div className={styles.formGroup}>
             <label htmlFor="email" className={styles.formLabel}>
-              Email Address
+              {t('auth.email')}
             </label>
             <input
               id="email"
               type="email"
               className={`${styles.formInput} ${errors.email ? styles.error : ''}`}
-              placeholder="Enter your email"
+              placeholder={t('placeholders.email')}
               {...register('email')}
             />
             {errors.email && <span className={styles.errorMessage}>{errors.email.message}</span>}
@@ -131,13 +133,13 @@ export default function SignupView() {
 
           <div className={styles.formGroup}>
             <label htmlFor="password" className={styles.formLabel}>
-              Password
+              {t('auth.password')}
             </label>
             <input
               id="password"
               type="password"
               className={`${styles.formInput} ${errors.password ? styles.error : ''}`}
-              placeholder="Create a strong password"
+              placeholder={t('placeholders.newPassword')}
               {...register('password')}
             />
             {errors.password && (
@@ -145,20 +147,20 @@ export default function SignupView() {
             )}
             <div className={styles.passwordRequirements}>
               <small>
-                Password must contain at least 8 characters with uppercase, lowercase, and number.
+                {t('validation.passwordRequirements')}
               </small>
             </div>
           </div>
 
           <div className={styles.formGroup}>
             <label htmlFor="confirmPassword" className={styles.formLabel}>
-              Confirm Password
+              {t('auth.confirmPassword')}
             </label>
             <input
               id="confirmPassword"
               type="password"
               className={`${styles.formInput} ${errors.confirmPassword ? styles.error : ''}`}
-              placeholder="Confirm your password"
+              placeholder={t('placeholders.confirmPassword')}
               {...register('confirmPassword')}
             />
             {errors.confirmPassword && (
@@ -167,11 +169,11 @@ export default function SignupView() {
           </div>
 
           <button type="submit" className={styles.authButton} disabled={isLoading || !isValid}>
-            {isLoading ? 'Creating Account...' : 'Sign Up'}
+            {isLoading ? t('auth.creatingAccount') : t('auth.signup')}
           </button>
 
           <div className={styles.authDivider}>
-            <span>OR</span>
+            <span>{t('common.or')}</span>
           </div>
 
           <GoogleLoginButton mode="signup" isLoading={isLoading} />
@@ -179,9 +181,9 @@ export default function SignupView() {
 
         <div className={styles.authFooter}>
           <p>
-            Already have an account?{' '}
+            {t('auth.alreadyHaveAccount')}{' '}
             <Link href={ROUTES.LOGIN} className={styles.authLink}>
-              Sign In
+              {t('auth.login')}
             </Link>
           </p>
         </div>

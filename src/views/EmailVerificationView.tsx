@@ -6,12 +6,14 @@ import { toast } from 'react-toastify';
 import { AuthService } from '@/services/authService';
 import { useAuth } from '@/hooks/useAuth';
 import { ROUTES } from '@/constants/routes';
+import { useTranslation } from '@/hooks/useTranslation';
 import styles from '@/styles/AuthForms.module.css';
 
 export default function EmailVerificationView() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { verifySignupOTP } = useAuth();
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [error, setError] = useState('');
@@ -67,11 +69,11 @@ export default function EmailVerificationView() {
 
     try {
       await verifySignupOTP({ email, otp: otpValue });
-      toast.success('🎉 Email verified successfully! Welcome to your dashboard!');
+      toast.success(t('messages.emailVerified'));
       router.push(ROUTES.DASHBOARD);
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : 'Invalid or expired OTP. Please try again.';
+        error instanceof Error ? error.message : t('messages.emailVerificationFailed');
       setError(errorMessage);
       toast.error(`❌ ${errorMessage}`);
       setOtp(['', '', '', '', '', '']);
@@ -90,10 +92,10 @@ export default function EmailVerificationView() {
     try {
       await AuthService.resendSignupOTP({ email });
       setCountdown(OTP_EXPIRY_TIME);
-      toast.success('📧 New verification code sent to your email!');
+      toast.success(t('messages.otpSent'));
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : 'Failed to resend verification code.';
+        error instanceof Error ? error.message : t('messages.otpResendFailed');
       setError(errorMessage);
       setCanResend(true);
       toast.error(`⚠️ ${errorMessage}`);
@@ -107,14 +109,14 @@ export default function EmailVerificationView() {
       <div className={styles.authCard}>
         <div className={styles.authHeader}>
           <div style={{ fontSize: '48px', marginBottom: '16px' }}>📧</div>
-          <h1>Verify Your Email</h1>
-          <p>We&apos;ve sent a 6-digit verification code to</p>
+          <h1>{t('emailVerification.title')}</h1>
+          <p>{t('emailVerification.sentCodeTo')}</p>
           <div style={{ fontWeight: 'bold', color: '#2a5298', marginTop: '8px' }}>{email}</div>
         </div>
 
         <div style={{ marginBottom: '24px' }}>
           <p style={{ textAlign: 'center', color: '#64748b', marginBottom: '20px' }}>
-            Enter the verification code below:
+            {t('emailVerification.enterCode')}
           </p>
 
           <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
@@ -160,22 +162,22 @@ export default function EmailVerificationView() {
           style={{ marginTop: '16px' }}
         >
           {isResending
-            ? 'Sending...'
+            ? t('emailVerification.resending')
             : !canResend && countdown > 0
-              ? `Resend in ${Math.floor(countdown / 60)}:${String(countdown % 60).padStart(2, '0')}`
-              : '🔄 Resend Code'}
+              ? `${t('auth.resendIn')} ${Math.floor(countdown / 60)}:${String(countdown % 60).padStart(2, '0')}`
+              : t('emailVerification.resendButton')}
         </button>
 
         <div className={styles.authFooter}>
           <p>
-            Wrong email?{' '}
+            {t('auth.wrongEmail')}{' '}
             <button
               type="button"
               onClick={() => router.push(ROUTES.SIGNUP)}
               className={styles.authLink}
               style={{ background: 'none', border: 'none', cursor: 'pointer' }}
             >
-              Sign up again
+              {t('auth.signUpAgain')}
             </button>
           </p>
         </div>

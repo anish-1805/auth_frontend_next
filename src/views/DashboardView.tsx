@@ -10,6 +10,7 @@ import { AuthService } from '@/services/authService';
 import { User } from '@/interfaces/auth';
 import { formatDate } from '@/utilities/formatDate';
 import { ROUTES } from '@/constants/routes';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
   PaginationWrapper,
   PaginationConfig,
@@ -22,6 +23,7 @@ import styles from '@/styles/DashboardTable.module.css';
 export default function DashboardView() {
   const router = useRouter();
   const { user, logout } = useAuth();
+  const { t } = useTranslation();
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -38,7 +40,7 @@ export default function DashboardView() {
   const [isDeleting, setIsDeleting] = useState(false);
   const initialLoadRef = useRef(false);
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
-  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+  const debouncedSearchTerm = useDebounce(searchTerm.trim(), 500);
 
   // Initial load
   useEffect(() => {
@@ -99,7 +101,7 @@ export default function DashboardView() {
       setHasMore(response.hasMore);
       setPage(nextPage);
     } catch (error) {
-      toast.error('Failed to load more users');
+      toast.error(t('messages.loadMoreFailed'));
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -120,7 +122,7 @@ export default function DashboardView() {
         setTotalPages(Math.ceil(response.total / itemsPerPage));
         setPage(pageNum);
       } catch (error) {
-        toast.error('Failed to load users');
+        toast.error(t('messages.loadUsersFailed'));
         console.error(error);
       } finally {
         setIsLoading(false);
@@ -158,7 +160,7 @@ export default function DashboardView() {
   const handleLogout = async () => {
     try {
       await logout();
-      toast.success('Logged out successfully');
+      toast.success(t('messages.logoutSuccess'));
       router.push(ROUTES.LOGIN);
     } catch (error) {
       console.error('Logout error:', error);
@@ -201,7 +203,7 @@ export default function DashboardView() {
     if (selectedUsers.size === 0) return;
 
     const confirmed = window.confirm(
-      `Are you sure you want to delete ${selectedUsers.size} user(s)? This action cannot be undone.`
+      t('messages.deleteConfirm', { count: selectedUsers.size.toString() })
     );
 
     if (!confirmed) return;
@@ -211,10 +213,10 @@ export default function DashboardView() {
       const userIdsArray = Array.from(selectedUsers);
       const result = await AuthService.deleteUsers(userIdsArray);
 
-      toast.success(`Successfully deleted ${result.deletedCount} user(s)`);
+      toast.success(t('messages.deleteSuccess', { count: result.deletedCount.toString() }));
 
       if (result.failedDeletions && result.failedDeletions.length > 0) {
-        toast.warning(`Failed to delete ${result.failedDeletions.length} user(s)`);
+        toast.warning(t('messages.deletePartialSuccess', { count: result.failedDeletions.length.toString() }));
       }
 
       // Clear selection and refresh data
@@ -232,7 +234,7 @@ export default function DashboardView() {
         loadInitialUsers();
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to delete users');
+      toast.error(error instanceof Error ? error.message : t('messages.deleteFailed'));
       console.error('Delete error:', error);
     } finally {
       setIsDeleting(false);
@@ -295,18 +297,18 @@ export default function DashboardView() {
       {/* Header */}
       <div className={styles.dashboardHeader}>
         <div className={styles.headerLeft}>
-          <h1>Dashboard</h1>
-          <p className={styles.userCount}>Welcome back, {user?.name}!</p>
+          <h1>{t('dashboard.title')}</h1>
+          <p className={styles.userCount}>{t('dashboard.welcome', { name: user?.name || '' })}</p>
         </div>
         <div className={styles.headerRight}>
           <button
             onClick={() => router.push(ROUTES.FILE_UPLOAD)}
             className={styles.fileUploadButton}
           >
-            📤 Upload Files
+            📤 {t('dashboard.uploadFiles')}
           </button>
           <button onClick={handleLogout} className={styles.logoutButton}>
-            Logout
+            {t('auth.logout')}
           </button>
         </div>
       </div>
@@ -314,7 +316,7 @@ export default function DashboardView() {
       {/* Current User Info Card */}
       <div className={styles.userInfoCard}>
         <div className={styles.userInfoHeader}>
-          <h2>Your Profile</h2>
+          <h2>{t('dashboard.yourProfile')}</h2>
         </div>
         <div className={styles.userInfoContent}>
           <div className={styles.userInfoAvatar}>
@@ -337,31 +339,31 @@ export default function DashboardView() {
           </div>
           <div className={styles.userInfoDetails}>
             <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>Name:</span>
+              <span className={styles.infoLabel}>{t('dashboard.name')}</span>
               <span className={styles.infoValue}>{user?.name}</span>
             </div>
             <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>Email:</span>
+              <span className={styles.infoLabel}>{t('dashboard.email')}</span>
               <span className={styles.infoValue}>{user?.email}</span>
             </div>
             <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>Account Type:</span>
+              <span className={styles.infoLabel}>{t('dashboard.accountType')}</span>
               <span
                 className={`${styles.badge} ${user?.isSocialLogin ? styles.badgeOAuth : styles.badgeLocal}`}
               >
-                {user?.isSocialLogin ? 'OAuth' : 'Local'}
+                {user?.isSocialLogin ? t('dashboard.oauth') : t('dashboard.local')}
               </span>
             </div>
             <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>Status:</span>
+              <span className={styles.infoLabel}>{t('dashboard.status')}</span>
               <span
                 className={`${styles.badge} ${user?.isEmailVerified ? styles.badgeVerified : styles.badgeNotVerified}`}
               >
-                {user?.isEmailVerified ? '✓ Verified' : '✗ Not Verified'}
+                {user?.isEmailVerified ? t('dashboard.verified') : t('dashboard.notVerified')}
               </span>
             </div>
             <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>Member Since:</span>
+              <span className={styles.infoLabel}>{t('dashboard.memberSince')}</span>
               <span className={styles.infoValue}>{formatDate(user?.createdAt)}</span>
             </div>
           </div>
@@ -372,14 +374,14 @@ export default function DashboardView() {
       <div className={styles.sectionHeader}>
         <div className={styles.sectionHeaderLeft}>
           <h2>
-            All Users (
+            {t('dashboard.allUsers')} (
             {paginationType === 'tabs' && !hasActiveFilters
               ? `${Math.min(page * itemsPerPage, total)} of ${total}`
               : filteredUsers.length + (filteredUsers.length !== total ? ` of ${total}` : '')}
             )
           </h2>
           {selectedUsers.size > 0 && (
-            <span className={styles.selectionInfo}>{selectedUsers.size} user(s) selected</span>
+            <span className={styles.selectionInfo}>{t('dashboard.usersSelected', { count: selectedUsers.size.toString() })}</span>
           )}
         </div>
         {selectedUsers.size > 0 && (
@@ -389,14 +391,14 @@ export default function DashboardView() {
               className={styles.clearSelectionButton}
               disabled={isDeleting}
             >
-              Clear Selection
+              {t('dashboard.clearSelection')}
             </button>
             <button
               onClick={handleDeleteSelected}
               className={styles.deleteButton}
               disabled={isDeleting}
             >
-              {isDeleting ? 'Deleting...' : `Delete Selected (${selectedUsers.size})`}
+              {isDeleting ? t('dashboard.deleting') : t('dashboard.deleteSelected', { count: selectedUsers.size.toString() })}
             </button>
           </div>
         )}
@@ -406,9 +408,9 @@ export default function DashboardView() {
       <div className={styles.searchSection}>
         <input
           type="text"
-          placeholder="Search by name or email..."
+          placeholder={t('dashboard.searchPlaceholder')}
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value.trim())}
+          onChange={(e) => setSearchTerm(e.target.value)}
           className={styles.searchInput}
         />
 
@@ -417,9 +419,9 @@ export default function DashboardView() {
           onChange={(e) => setAuthTypeFilter(e.target.value as 'all' | 'oauth' | 'local')}
           className={styles.filterSelect}
         >
-          <option value="all">All Auth Types</option>
-          <option value="oauth">OAuth Only</option>
-          <option value="local">Local Only</option>
+          <option value="all">{t('dashboard.all')}</option>
+          <option value="oauth">{t('dashboard.oauthOnly')}</option>
+          <option value="local">{t('dashboard.localOnly')}</option>
         </select>
 
         <select
@@ -427,19 +429,19 @@ export default function DashboardView() {
           onChange={(e) => setStatusFilter(e.target.value as 'all' | 'verified' | 'unverified')}
           className={styles.filterSelect}
         >
-          <option value="all">All Status</option>
-          <option value="verified">Verified Only</option>
-          <option value="unverified">Unverified Only</option>
+          <option value="all">{t('dashboard.all')}</option>
+          <option value="verified">{t('dashboard.verifiedOnly')}</option>
+          <option value="unverified">{t('dashboard.unverifiedOnly')}</option>
         </select>
 
         {hasActiveFilters && (
           <button onClick={clearFilters} className={styles.clearFiltersButton}>
-            Clear Filters
+            {t('dashboard.clearFilters')}
           </button>
         )}
 
         <div className={styles.paginationToggle}>
-          <label htmlFor="pagination-type">Pagination Type:</label>
+          <label htmlFor="pagination-type">{t('dashboard.paginationType')}</label>
           <select
             id="pagination-type"
             value={paginationType}
@@ -452,8 +454,8 @@ export default function DashboardView() {
             }}
             className={styles.filterSelect}
           >
-            <option value="tabs">Tabs Pagination</option>
-            <option value="infinite">Infinite Scroll</option>
+            <option value="tabs">{t('dashboard.tabs')}</option>
+            <option value="infinite">{t('dashboard.infiniteScroll')}</option>
           </select>
         </div>
       </div>
@@ -467,11 +469,11 @@ export default function DashboardView() {
           loader={
             <div className={styles.loadMoreContainer}>
               <div className={styles.spinner}></div>
-              <span style={{ marginLeft: '10px' }}>Loading users...</span>
+              <span style={{ marginLeft: '10px' }}>{t('common.loading')}</span>
             </div>
           }
-          endMessage={<div className={styles.endMessage}>All users loaded</div>}
-          emptyMessage={<div className={styles.noUsers}>No users found</div>}
+          endMessage={<div className={styles.endMessage}>{t('dashboard.noMoreUsers')}</div>}
+          emptyMessage={<div className={styles.noUsers}>{t('dashboard.noUsers')}</div>}
           className={styles.paginationWrapper}
         >
           <table className={styles.table}>
@@ -536,7 +538,7 @@ export default function DashboardView() {
                         u.isSocialLogin ? styles.badgeOAuth : styles.badgeLocal
                       }`}
                     >
-                      {u.isSocialLogin ? 'OAuth' : 'Local'}
+                      {u.isSocialLogin ? t('dashboard.oauth') : t('dashboard.local')}
                     </span>
                   </td>
                   <td>
@@ -545,7 +547,7 @@ export default function DashboardView() {
                         u.isEmailVerified ? styles.badgeVerified : styles.badgeNotVerified
                       }`}
                     >
-                      {u.isEmailVerified ? '✓ Verified' : '✗ Not Verified'}
+                      {u.isEmailVerified ? t('dashboard.verified') : t('dashboard.notVerified')}
                     </span>
                   </td>
                   <td>

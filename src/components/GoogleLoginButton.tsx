@@ -1,6 +1,7 @@
 'use client';
 
 import { AuthService } from '@/services/authService';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface GoogleLoginButtonProps {
   mode?: 'login' | 'signup';
@@ -11,12 +12,14 @@ export default function GoogleLoginButton({
   mode = 'login',
   isLoading = false,
 }: GoogleLoginButtonProps) {
+  const { t } = useTranslation();
+  
   const handleGoogleLogin = () => {
     const googleAuthUrl = AuthService.getGoogleAuthUrl();
     window.location.href = googleAuthUrl;
   };
 
-  const buttonText = mode === 'login' ? 'Continue with Google' : 'Sign up with Google';
+  const buttonText = mode === 'login' ? t('auth.continueWithGoogle') : t('auth.signUpWithGoogle');
 
   return (
     <button

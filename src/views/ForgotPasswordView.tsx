@@ -9,16 +9,18 @@ import * as yup from 'yup';
 import { AuthService } from '@/services/authService';
 import { ROUTES } from '@/constants/routes';
 import Link from 'next/link';
+import { useTranslation } from '@/hooks/useTranslation';
 import styles from '@/styles/AuthForms.module.css';
 
 const forgotPasswordSchema = yup.object({
-  email: yup.string().required('Email is required').email('Please enter a valid email address'),
+  email: yup.string().required('Email is required').email('Invalid email address'),
 });
 
 type ForgotPasswordFormData = yup.InferType<typeof forgotPasswordSchema>;
 
 export default function ForgotPasswordView() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [serverError, setServerError] = useState('');
 
@@ -37,11 +39,11 @@ export default function ForgotPasswordView() {
 
     try {
       await AuthService.forgotPassword(data);
-      toast.success('📧 Password reset code sent to your email!');
+      toast.success(t('messages.passwordResetCodeSent'));
       router.push(`${ROUTES.RESET_PASSWORD}?email=${encodeURIComponent(data.email)}`);
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : 'Failed to send reset code. Please try again.';
+        error instanceof Error ? error.message : t('messages.passwordResetFailed');
       setServerError(errorMessage);
       toast.error(`⚠️ ${errorMessage}`);
     } finally {
@@ -54,8 +56,8 @@ export default function ForgotPasswordView() {
       <div className={styles.authCard}>
         <div className={styles.authHeader}>
           <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔑</div>
-          <h1>Forgot Password?</h1>
-          <p>Enter your email address and we&apos;ll send you a verification code.</p>
+          <h1>{t('auth.forgotPasswordTitle')}</h1>
+          <p>{t('forgotPassword.description')}</p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className={styles.authForm}>
@@ -67,13 +69,13 @@ export default function ForgotPasswordView() {
 
           <div className={styles.formGroup}>
             <label htmlFor="email" className={styles.formLabel}>
-              <span>📧</span> Email Address
+              <span>📧</span> {t('auth.email')}
             </label>
             <input
               id="email"
               type="email"
               className={`${styles.formInput} ${errors.email ? styles.error : ''}`}
-              placeholder="Enter your registered email"
+              placeholder={t('forgotPassword.emailPlaceholder')}
               {...register('email')}
             />
             {errors.email && <span className={styles.errorMessage}>{errors.email.message}</span>}
@@ -83,11 +85,11 @@ export default function ForgotPasswordView() {
             {isLoading ? (
               <>
                 <span className={styles.spinner}></span>
-                Sending Reset Code...
+                {t('auth.sendingResetCode')}
               </>
             ) : (
               <>
-                <span>📤</span> Send Reset Code
+                <span>📤</span> {t('auth.sendResetCode')}
               </>
             )}
           </button>
@@ -95,35 +97,35 @@ export default function ForgotPasswordView() {
 
         <div className={styles.forgotPasswordInfo}>
           <div className={styles.infoSection}>
-            <h4>What happens next?</h4>
+            <h4>{t('forgotPassword.whatHappensNext')}</h4>
             <ol>
-              <li>We&apos;ll send a 6-digit code to your email</li>
-              <li>Enter the code on the next page</li>
-              <li>Create your new password</li>
-              <li>Log in with your new password</li>
+              <li>{t('forgotPassword.step1')}</li>
+              <li>{t('forgotPassword.step2')}</li>
+              <li>{t('forgotPassword.step3')}</li>
+              <li>{t('forgotPassword.step4')}</li>
             </ol>
           </div>
 
           <div className={styles.securityNote}>
             <div className={styles.securityIcon}>🛡️</div>
             <div>
-              <strong>Security Note:</strong>
-              <p>The reset code will expire in 5 minutes for your security.</p>
+              <strong>{t('forgotPassword.securityNote')}</strong>
+              <p>{t('forgotPassword.codeExpiry')}</p>
             </div>
           </div>
         </div>
 
         <div className={styles.authFooter}>
           <p>
-            Remember your password?{' '}
+            {t('auth.rememberPassword')}{' '}
             <Link href={ROUTES.LOGIN} className={styles.authLink}>
-              <span>🔐</span> Sign In
+              <span>🔐</span> {t('auth.login')}
             </Link>
           </p>
           <p style={{ marginTop: '8px' }}>
-            Don&apos;t have an account?{' '}
+            {t('auth.dontHaveAccount')}{' '}
             <Link href={ROUTES.SIGNUP} className={styles.authLink}>
-              <span>✨</span> Sign Up
+              <span>✨</span> {t('auth.signup')}
             </Link>
           </p>
         </div>

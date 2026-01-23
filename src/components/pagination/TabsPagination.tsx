@@ -69,7 +69,7 @@ function TabsPagination({
       </div>
 
       {/* Pagination Controls */}
-      {data.totalPages > 1 && (
+      {data.totalPages >= 1 && (
         <div className={styles.paginationContainer}>
           {/* Page Info */}
           {config.showPageInfo !== false && (
@@ -79,6 +79,7 @@ function TabsPagination({
           )}
 
           {/* Pagination Controls */}
+          {data.totalPages > 1 && (
           <div className={styles.paginationControls}>
             {/* Previous Button */}
             <button
@@ -140,6 +141,7 @@ function TabsPagination({
               Next →
             </button>
           </div>
+          )}
 
           {/* Jump to Page */}
           {config.showJumpToPage && data.totalPages > 5 && (
